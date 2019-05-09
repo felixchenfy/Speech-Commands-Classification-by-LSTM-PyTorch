@@ -16,7 +16,7 @@ if 1: # for AudioRecorder
 class TimerPrinter(object):
     # Print a message with a time gap of "T_gap"
     def __init__(self):
-        self.prev_time = 0
+        self.prev_time = -999
 
     def print(self, s, T_gap):
         curr_time = time.time()
@@ -25,6 +25,9 @@ class TimerPrinter(object):
         else:
             self.prev_time = curr_time
             print(s)
+    
+    def reset(self):
+        self.prev_time = -999
 
 
 class AudioRecorder(object):
@@ -60,11 +63,11 @@ class AudioRecorder(object):
             # soundfile expects an int, sounddevice provides a float:
             self.args.samplerate = int(device_info['default_samplerate'])
 
-    def start_record(self):
+    def start_record(self, folder='./'):
         
         # Some settings
         self.filename = tempfile.mktemp(
-            prefix='audio_' + self.get_time(),
+            prefix=folder + 'audio_' + self.get_time(),
             suffix='.wav',
             dir='')
         self.audio_time0 = time.time()
@@ -80,10 +83,12 @@ class AudioRecorder(object):
 
         # Stop thread
         self.thread_record.terminate()
-        # self._thread_alive = False
-        print("\n\n" + "/"*80)
-        print("Complete writing audio to file:", self.filename)
-        print("/"*80 + "\n")
+        # self._thread_alive = False # This seems not working
+        
+        if 0: # Print dashed lines
+            print("\n\n" + "/"*80)
+            print("Complete writing audio to file:", self.filename)
+            print("/"*80 + "\n")
 
         # Check result
         time_duration = time.time() - self.audio_time0
@@ -112,8 +117,9 @@ class AudioRecorder(object):
                 while True:
                     file.write(q.get())
             
-    def check_audio(self, time_duration, MIN_AUDIO_LENGTH=2):
+    def check_audio(self, time_duration, MIN_AUDIO_LENGTH=0.1):
         # Delete file if it's too short
+        print("\n")
         if time_duration < MIN_AUDIO_LENGTH:
             self.delete_file(self.filename)
             print("Audio is too short. It's been deleted.")
@@ -226,7 +232,6 @@ if __name__ == '__main__':
     # Others
     tprinter = TimerPrinter() # for print
 
-
     # Start loop
     while True:
         tprinter.print("Usage: keep pressing down 'R' to record audio", T_gap=2)
@@ -235,7 +240,7 @@ if __name__ == '__main__':
         if board.has_just_pressed():
 
             # start recording
-            recorder.start_record() 
+            recorder.start_record(folder='./data_tmp/') 
 
             # wait until key release
             while not board.has_just_released():
