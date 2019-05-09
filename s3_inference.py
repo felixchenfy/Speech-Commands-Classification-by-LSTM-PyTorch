@@ -13,7 +13,8 @@ from mylib_record_audio import *
 
 # load model ---------------------------------------------
 classes = load_list("classes.csv")
-path = './model/good_model.pickle'
+# path = './model/m1.pickle'
+path = './model/trained_classifier.pickle'
 with open(path, 'rb') as f:
     model2 = pickle.load(f)
 
@@ -52,7 +53,10 @@ if __name__ == '__main__':
 
             # Load audio
             data, sample_rate = read_audio(recorder.filename)
+            
+            data = remove_data_prefix(data, sample_rate)
             features = data_to_features(data, sample_rate)
+            # play_audio(data=data, sample_rate=sample_rate)
 
             # Predict
             X = np.ravel(features)

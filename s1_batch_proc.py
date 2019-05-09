@@ -13,6 +13,7 @@ def get_filenames(path, format="*", no_prefix=False):
 
 def load_classes(data_folder):
     classes = get_filenames(data_folder, no_prefix=True)
+    classes = [c for c in classes if ('.' not in classes)]
     print(classes)
     return classes
 
@@ -27,17 +28,32 @@ if __name__=="__main__":
         for fn in fnames:
             if fn[-4:] != ".wav": continue
             data, sample_rate = read_audio(fn)
-            xi = data_to_features(data, sample_rate)
 
-            # Print and plot
-            print("File: {}, feature: {}".format(fn, xi.shape))
-            fn_jpg = change_suffix(fn, new_suffix="jpg")
-            cv2.imwrite(fn_jpg, cv2_image_f2i(xi))
-            
-            xi = np.ravel(xi)
-            # Store data
-            train_X.append(xi)
-            train_Y.append(yi)
+            # Preprocess data
+            data = remove_data_prefix(data, sample_rate)
+            print("File: {}, data: {}".format(fn, data.shape))
+
+            datas = [data]
+            NUM_AUGMENTS = 0 # Data augment reduce the performance
+            for i in range(NUM_AUGMENTS):
+                datas.append(data_augment(data, sample_rate))
+
+            # Compute features
+            for ith_data, data in enumerate(datas):
+                xi = data_to_features(data, sample_rate)
+                # print("  {}th data, len = {}".format(ith_data, data.size))
+
+                # Print and plot
+                if 0:
+                    fname_jpg = change_suffix(fn, index=ith_data, new_suffix="jpg")
+                    cv2.imwrite(fname_jpg, cv2_image_f2i(xi))
+                
+                xi = np.ravel(xi)
+                # Store data
+                train_X.append(xi)
+                train_Y.append(yi)
+            # print("")
+            continue
 
     train_X, train_Y = np.array(train_X), np.array(train_Y, dtype=np.int)
 

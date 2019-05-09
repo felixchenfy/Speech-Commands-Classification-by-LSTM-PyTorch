@@ -14,13 +14,16 @@ from mylib_commons import *
 def test_mfcc_features(filename):
     # Load data
     data, sample_rate = read_audio(filename)
+    data = remove_data_prefix(data, sample_rate)
+    data = data_augment(data, sample_rate)
+    # play_audio(data=data, sample_rate=sample_rate)
 
     # Proc data
     features = data_to_features(data, sample_rate)
     cv2.imwrite('audio_tmp.jpg', cv2_image_f2i(features))
 
     # Plot mfccs
-    if 0:
+    if 1:
         fig = plt.figure(figsize=(12, 8))
         plt.subplot(2, 1, 1) # plot data
         plot_audio(data, sample_rate)
@@ -33,6 +36,7 @@ def test_mfcc_features(filename):
         plt.show()
     write_audio('audio_tmp.wav', data, sample_rate=sample_rate//1)
 
+    
 filename = 'audio_1.wav'
 filename = 'data_src/one/audio_05-08-23-02-45-467k76k6aka.wav'
 # filename = 'data_src/backward/audio_05-08-23-34-44-9579o1vyzj5.wav'

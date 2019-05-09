@@ -240,7 +240,7 @@ if __name__ == '__main__':
         if board.has_just_pressed():
 
             # start recording
-            recorder.start_record(folder='./data_tmp/') 
+            recorder.start_record(folder='./data_src/') 
 
             # wait until key release
             while not board.has_just_released():

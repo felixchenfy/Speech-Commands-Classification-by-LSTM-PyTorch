@@ -3,9 +3,12 @@
 import numpy as np 
 import cv2
 
-def change_suffix(s, new_suffix):
+def change_suffix(s, new_suffix, index=None):
     i = s.rindex('.')
-    s = s[:i+1] + new_suffix
+    si = ""
+    if index is not None:
+        si = "_" + str(index)
+    s = s[:i] + si + "." + new_suffix
     return s 
 
 def cv2_image_f2i(img):

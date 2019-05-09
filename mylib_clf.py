@@ -41,11 +41,11 @@ class ClassifierOfflineTrain(object):
         self.classifiers = [
             KNeighborsClassifier(5),
             SVC(kernel="linear", C=10.0),
-            SVC(gamma=0.001, C=10.0, verbose=True),
+            SVC(gamma=0.01, C=10.0, verbose=True),
             GaussianProcessClassifier(1.0 * RBF(1.0)),
             DecisionTreeClassifier(max_depth=5),
             RandomForestClassifier(max_depth=30, n_estimators=100, max_features="auto"),
-            MLPClassifier((50, 50, 30, 20)), # Neural Net
+            MLPClassifier((100, 100, 100, 100)), # Neural Net
             AdaBoostClassifier(),
             GaussianNB(),
             QuadraticDiscriminantAnalysis()]

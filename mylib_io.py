@@ -5,6 +5,17 @@ import soundfile as sf
 import librosa
 import librosa.display
 import json
+import subprocess
+
+def play_audio(filename=None, data=None, sample_rate=None):
+    if filename is not None:
+        print("Play audio:", filename)
+        subprocess.call(["cvlc", "--play-and-exit", filename])
+    else:
+        print("Play audio data")
+        filename = 'tmp_dsafsdafjowaefwalj.wav'
+        write_audio(filename, data, sample_rate)
+        subprocess.call(["cvlc", "--play-and-exit", filename])
 
 def read_audio(filename, PRINT=False):
     data, sample_rate = sf.read(filename)
