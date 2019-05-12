@@ -14,12 +14,13 @@ def cv2_imshow(img, window_name="window name"):
     return q 
 
 
-def plot_audio(data, sample_rate):
+def plot_audio(data, sample_rate, yrange=(-1.5, 1.5)):
     t = np.arange(len(data)) / sample_rate
     plt.plot(t, data)
     plt.xlabel('time (s)')
     plt.ylabel('Intensity')
     plt.title('Audio data')
+    plt.axis([None, None, yrange[0], yrange[1]])
 
 def plot_mfcc(mfccs, sample_rate, method='librosa'):
     if method == "librosa":

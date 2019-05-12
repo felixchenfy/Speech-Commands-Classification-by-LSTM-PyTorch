@@ -7,17 +7,30 @@ from mylib.mylib_plot import *
 from mylib.mylib_io import *
 from mylib.mylib_feature_proc import *
 import pickle
-
 from mylib.mylib_record_audio import *
 
+from mylib.mylib_rnn import RNN, create_RNN_model
 
-# load model ---------------------------------------------
+import torch 
+import torch.nn as nn
+
+# load classifier model ---------------------------------------------
 classes = read_list("classes.csv")
-# path = './models/m1.pickle'
-path = './models/good_model2.pickle'
-with open(path, 'rb') as f:
-    model2 = pickle.load(f)
+MODEL_TO_USE = ["sklearn", "rnn"][1]
+if MODEL_TO_USE == "sklearn": # sklearn
+    # path = './models/m1.pickle'
+    path = './models/good_model2.pickle'
+    with open(path, 'rb') as f:
+        model2 = pickle.load(f)
 
+elif MODEL_TO_USE == "rnn": # RNN
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print("device for RNN: ", device)
+    LOAD_PRETRAINED_PATH = 'models/good_model_ep14_ac98.ckpt'
+    model2 = create_RNN_model(LOAD_PRETRAINED_PATH, device)
+    if 0: # random test
+        label = model2.predict(np.random.random((66, 8)))
+        print("Label of a random feature: ", label, ", label's data type = ", type(label))
 
 # start record audio ---------------------------------------------
 if __name__ == '__main__':
@@ -59,8 +72,11 @@ if __name__ == '__main__':
             # play_audio(data=data, sample_rate=sample_rate)
 
             # Predict
-            X = np.ravel(features)
-            predicted_idx = model2.predict(X)[0]
+            if MODEL_TO_USE == "sklearn":
+                X = np.ravel(features)
+            elif MODEL_TO_USE == "rnn":
+                X = features
+            predicted_idx = model2.predict(X)
             predicted_label = classes[predicted_idx]
             print("\nWord labels: {}".format(classes))
             print("\nPredicted label: {}".format(predicted_label))

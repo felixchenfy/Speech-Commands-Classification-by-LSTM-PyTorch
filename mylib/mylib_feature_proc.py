@@ -86,18 +86,23 @@ def mfcc_to_image(mfcc, row=200, col=400):
     img = cv2.resize(img, (col, row))
     return img
 
-def calc_histogram(mfcc, bins=10, binrange=(-50, 200), col_divides = 3): 
+def calc_histogram(mfcc, bins=10, binrange=(-50, 200), col_divides = 5): 
     rows, cols = mfcc.shape
     cc = cols//col_divides # cols / num_hist = size of each hist
     def calc_hist(row, cl, cr):
         hist, bin_edges = np.histogram(mfcc[row, cl:cr], bins=bins, range=binrange)
         return hist/(cr-cl)
     features = []
-    for row in range(rows):
-        row_hists = [calc_hist(row, j*cc, (j+1)*cc) for j in range(col_divides)]
-        row_hists = np.hstack(row_hists)
-        features += [row_hists]
-    return np.vstack(features)
+    for j in range(col_divides):
+        row_hists = [calc_hist(row, j*cc, (j+1)*cc) for row in range(rows) ]
+        row_hists = np.vstack(row_hists)
+        features += [row_hists.reshape((1, -1))]
+    return np.vstack(features).T
+    # for row in range(rows):
+    #     row_hists = [calc_hist(row, j*cc, (j+1)*cc) for j in range(col_divides)]
+    #     row_hists = np.hstack(row_hists)
+    #     features += [row_hists]
+    # return np.vstack(features)
 
 def data_augment(data, sample_rate):
     # https://www.kaggle.com/CVxTz/audio-data-augmentation
@@ -146,11 +151,13 @@ def compute_mfcc(data, sample_rate):
 
 def data_to_features(data, sample_rate):
     mfcc = compute_mfcc(data, sample_rate)
+    return mfcc.T # feature = (91, 8)
+
     # print("features shape = ", mfcc.shape)
 
     # mfcc = remove_prefix(mfcc)
-    mfcc = calc_histogram(mfcc)
+    # mfcc = calc_histogram(mfcc)
+    # return mfcc.T 
 
     # mfcc = add_padding(mfcc)
     # mfcc = mfcc_to_image(mfcc)
-    return mfcc 

@@ -14,6 +14,15 @@ def change_suffix(s, new_suffix, index=None):
     s = s[:i] + si + "." + new_suffix
     return s 
 
+
+def int2str(num, len):
+    return ("{:0"+str(len)+"d}").format(num)
+
+def add_idx_suffix(s, idx):
+    i = s.rindex('.')
+    s = s[:i] + "_" + str(idx) + s[i:]
+    return s 
+
 def cv2_image_f2i(img):
     img = (img*255).astype(np.uint8)
     row, col = img.shape
