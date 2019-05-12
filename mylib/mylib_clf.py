@@ -22,11 +22,11 @@ class ClassifierOfflineTrain(object):
         self.init_all_models()
         # self.clf = self.choose_model("Nearest Neighbors")
         # self.clf = self.choose_model("Linear SVM")
-        # self.clf = self.choose_model("RBF SVM") # 0.65
+        self.clf = self.choose_model("RBF SVM") # 0.65
         # self.clf = self.choose_model("Gaussian Process")
         # self.clf = self.choose_model("Decision Tree")
         # self.clf = self.choose_model("Random Forest")
-        self.clf = self.choose_model("Neural Net") # 0.6
+        # self.clf = self.choose_model("Neural Net") # 0.6
 
     def choose_model(self, name):
         self.model_name = name
@@ -41,7 +41,7 @@ class ClassifierOfflineTrain(object):
         self.classifiers = [
             KNeighborsClassifier(5),
             SVC(kernel="linear", C=10.0),
-            SVC(gamma=0.01, C=10.0, verbose=True),
+            SVC(gamma=0.02, C=10.0, verbose=True),
             GaussianProcessClassifier(1.0 * RBF(1.0)),
             DecisionTreeClassifier(max_depth=5),
             RandomForestClassifier(max_depth=30, n_estimators=100, max_features="auto"),

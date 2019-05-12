@@ -6,10 +6,10 @@ import soundfile as sf
 import librosa
 import librosa.display
 
-from mylib_io import * 
-from mylib_plot import * 
-from mylib_feature_proc import *
-from mylib_commons import *
+from mylib.mylib_io import * 
+from mylib.mylib_plot import * 
+from mylib.mylib_feature_proc import *
+from mylib.mylib_commons import *
 
 def test_mfcc_features(filename):
     # Load data
@@ -20,7 +20,7 @@ def test_mfcc_features(filename):
 
     # Proc data
     features = data_to_features(data, sample_rate)
-    cv2.imwrite('audio_tmp.jpg', cv2_image_f2i(features))
+    cv2.imwrite('data_tmp/audio_tmp.jpg', cv2_image_f2i(features))
 
     # Plot mfccs
     if 1:
@@ -34,7 +34,7 @@ def test_mfcc_features(filename):
     if 0:
         plot_mfcc(features, sample_rate, method="hist")
         plt.show()
-    write_audio('audio_tmp.wav', data, sample_rate=sample_rate//1)
+    write_audio('data_tmp/audio_tmp.wav', data, sample_rate=sample_rate//1)
 
     
 filename = 'audio_1.wav'

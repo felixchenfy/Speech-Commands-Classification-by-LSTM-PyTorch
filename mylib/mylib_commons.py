@@ -3,6 +3,9 @@
 import numpy as np 
 import cv2
 
+def get_filename(path):
+    return path.split('/')[-1]
+
 def change_suffix(s, new_suffix, index=None):
     i = s.rindex('.')
     si = ""

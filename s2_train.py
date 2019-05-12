@@ -1,13 +1,14 @@
 
 import numpy as np 
 import time
-from mylib_clf import *
-from mylib_plot import *
-from mylib_io import *
+from mylib.mylib_clf import *
+from mylib.mylib_plot import *
+from mylib.mylib_io import *
 
-train_X = np.loadtxt('train_X.csv')
-train_Y = np.loadtxt('train_Y.csv').astype(np.int)
-classes = load_list("classes.csv")
+train_X = read_list('train_X.csv')
+train_Y = read_list('train_Y.csv')
+train_X, train_Y = np.array(train_X), np.array(train_Y).astype(np.int)
+classes = read_list("classes.csv")
 tr_X, te_X, tr_Y, te_Y = split_data(train_X, train_Y, USE_ALL=False)
 
 # Train
@@ -33,7 +34,7 @@ if model.model_name=="Neural Net":
     
     # Save trained model to file
     import pickle
-    path_to_save_model = './model/trained_classifier.pickle'
+    path_to_save_model = './models/trained_classifier.pickle'
     
     with open(path_to_save_model, 'wb') as f:
         pickle.dump(model, f)

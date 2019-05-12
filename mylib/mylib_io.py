@@ -32,7 +32,12 @@ def write_list(filename, data):
         json.dump(data, f)
         # What's in file: [[2, 3, 5], [7, 11, 13, 15]]
 
-def load_list(filename):
+def read_list(filename):
     with open(filename) as f:
         data = json.load(f)
     return data
+
+def write_list(filename, data):
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+        # What's in file: [[2, 3, 5], [7, 11, 13, 15]]

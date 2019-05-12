@@ -2,19 +2,19 @@
 
 import numpy as np 
 import time
-from mylib_clf import *
-from mylib_plot import *
-from mylib_io import *
-from mylib_feature_proc import *
+from mylib.mylib_clf import *
+from mylib.mylib_plot import *
+from mylib.mylib_io import *
+from mylib.mylib_feature_proc import *
 import pickle
 
-from mylib_record_audio import *
+from mylib.mylib_record_audio import *
 
 
 # load model ---------------------------------------------
-classes = load_list("classes.csv")
-# path = './model/m1.pickle'
-path = './model/trained_classifier.pickle'
+classes = read_list("classes.csv")
+# path = './models/m1.pickle'
+path = './models/good_model2.pickle'
 with open(path, 'rb') as f:
     model2 = pickle.load(f)
 
