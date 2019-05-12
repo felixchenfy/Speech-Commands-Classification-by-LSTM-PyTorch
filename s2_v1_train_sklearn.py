@@ -1,7 +1,7 @@
 
 import numpy as np 
 import time
-from mylib.mylib_clf import *
+from mylib.mylib_sklearn import *
 from mylib.mylib_plot import *
 from mylib.mylib_io import *
 

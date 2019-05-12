@@ -2,10 +2,7 @@
 
 import numpy as np 
 import time
-from mylib.mylib_clf import *
-# from mylib.mylib_plot import *
 from mylib.mylib_io import *
-# from mylib.mylib_commons import *
 from mylib.mylib_rnn import *
 
 import torch 
@@ -15,7 +12,7 @@ import torch.nn as nn
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-# -------------------------- Settings
+# Settings -------------------------- 
 IF_TRAIN_MODEL = False
 IF_LOAD_FROM_PRETRAINED = not IF_TRAIN_MODEL
 SAVE_MODEL_NAME = 'models/model.ckpt'
@@ -24,28 +21,18 @@ SAVE_MODEL_NAME = 'models/model.ckpt'
 # LOAD_PRETRAINED_PATH = 'models/model_024.ckpt'
 LOAD_PRETRAINED_PATH = 'models/good_model_ep14_ac98.ckpt'
 
-# -------------------------- Load data
-train_X = read_list('train_X.csv') # list[list]
-train_Y = read_list('train_Y.csv') # list
+# Load data -------------------------- 
+train_X0 = read_list('train_X.csv') # list[list]
+train_Y0 = read_list('train_Y.csv') # list
+test_X = read_list('test_X.csv') # list[list]
+test_Y = read_list('test_Y.csv') # list
 classes = read_list("classes.csv") # list
-tr_X, ev_X, tr_Y, ev_Y = split_data(train_X, train_Y, USE_ALL=False, dtype='list')
-
-
-te_X = read_list('test_X.csv') # list[list]
-te_Y = read_list('test_Y.csv') # list
+train_X, eval_X, train_Y, eval_Y = split_data(train_X0, train_Y0, USE_ALL=False, dtype='list')
 
 # -------------------------- Torch dataset class
-train_dataset = AudioDataset(
-    tr_X, tr_Y, input_size,
-    )
-
-eval_dataset = AudioDataset(
-    ev_X, ev_Y, input_size,
-    )
-
-test_dataset = AudioDataset(
-    te_X, te_Y, input_size,
-    )
+train_dataset = AudioDataset(train_X, train_Y, input_size,)
+eval_dataset = AudioDataset(eval_X, eval_Y, input_size,)
+test_dataset = AudioDataset(test_X, test_Y, input_size,)
 
 # -------------------------- Torch data loader
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,

@@ -6,7 +6,9 @@ import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 import numpy as np 
 import time
-from .mylib_commons import *
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../")
+from mylib.mylib_commons import *
 
 # Hyper-parameters
 FEATURE_WITH_DIFFERENT_LENGTH = True
@@ -156,8 +158,7 @@ def train_model(model, train_loader, eval_loader, name_to_save_model=None):
             # we can see that the shape of images should be: 
             #    (batch_size, sequence_length, input_size)
             '''
-            featuress = featuress.to(device) # 
-            
+            featuress = featuress.to(device)
             labels = labels.to(device)
             
             # Forward pass
@@ -194,3 +195,41 @@ def train_model(model, train_loader, eval_loader, name_to_save_model=None):
                 print("Save model to: ", name_to_save)
                 print("-"*80)
                 print("\n")
+            print("")
+
+def test_model_on_a_random_dataset():
+
+    # Create random data
+    num_samples = 13
+    sequence_length = 23
+    train_X = np.random.random((num_samples, sequence_length, input_size))
+    train_Y = np.random.randint(low=0, high=num_classes, size=(num_samples, ))
+
+    # Convert data to list, which is the required data format
+    train_X = [train_X[i].flatten().tolist() for i in range(num_samples)]
+    train_Y = train_Y.tolist()
+
+    # Construct dataset
+    train_dataset = AudioDataset(train_X, train_Y, input_size,)
+    train_loader = torch.utils.data.DataLoader(
+        dataset=train_dataset,
+        batch_size=batch_size, 
+        shuffle=True)
+    import copy
+    eval_loader = copy.deepcopy(train_loader)
+    test_loader = copy.deepcopy(train_loader)
+
+    # Create model
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = RNN(input_size, hidden_size, num_layers, num_classes, device).to(device)
+
+    # Train model on training set
+    train_model(model, train_loader, eval_loader, name_to_save_model=None)
+
+    # Test model on test set
+    model.eval()    
+    with torch.no_grad():
+        evaluate_model(model, test_loader)
+
+if __name__ == "__main__":
+    test_model_on_a_random_dataset()

@@ -2,7 +2,7 @@
 
 import numpy as np 
 import time
-from mylib.mylib_clf import *
+from mylib.mylib_sklearn import *
 from mylib.mylib_plot import *
 from mylib.mylib_io import *
 from mylib.mylib_feature_proc import *
@@ -16,7 +16,9 @@ import torch.nn as nn
 
 # load classifier model ---------------------------------------------
 classes = read_list("classes.csv")
+
 MODEL_TO_USE = ["sklearn", "rnn"][1]
+
 if MODEL_TO_USE == "sklearn": # sklearn
     # path = './models/m1.pickle'
     path = './models/good_model2.pickle'

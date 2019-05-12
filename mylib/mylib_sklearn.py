@@ -110,38 +110,6 @@ class ClassifierOfflineTrain(object):
         return accu, te_Y_predict
 
 
-def split_data(X, Y, USE_ALL=False, dtype='numpy'):
-    if dtype == 'numpy':
-        print("Data size = {}, feature dimension = {}".format(X.shape[0], X.shape[1]))
-        from sklearn.model_selection import train_test_split
-        if USE_ALL:
-            tr_X = np.copy(X)
-            tr_Y = np.copy(Y)
-            te_X = np.copy(X)
-            te_Y = np.copy(Y)
-        else:
-            tr_X, te_X, tr_Y, te_Y = train_test_split(X, Y, test_size=0.3, random_state=14123)
-    elif dtype == 'list':
-        print("Data size = {}, feature dimension = {}".format(len(X), len(X[0])))
-        if USE_ALL:
-            tr_X = X[:]
-            tr_Y = Y[:]
-            te_X = X[:]
-            te_Y = Y[:]
-        else:
-            N = len(Y)
-            train_size = int(0.8 * N)
-            randidx = np.random.permutation(N)
-            n1, n2 = randidx[0:train_size], randidx[train_size:]
-            def get(arr_vals, arr_idx):
-                return [arr_vals[idx] for idx in arr_idx]
-            tr_X = get(X, n1)[:]
-            tr_Y = get(Y, n1)[:]
-            te_X = get(X, n2)[:]
-            te_Y = get(Y, n2)[:]
-    print("Num training: ", len(tr_Y))
-    print("Num evaluation:  ", len(te_Y))
-    return tr_X, te_X, tr_Y, te_Y
 
 class Timer(object):
     def __init__(self):
