@@ -18,7 +18,7 @@ if FEATURE_WITH_DIFFERENT_LENGTH:
     hidden_size = 64
     num_layers = 3
     num_classes = 10
-    num_epochs = 80
+    num_epochs = 15
     learning_rate = 0.0005
     weight_decay = 0.00
 else:
@@ -177,7 +177,7 @@ def train_model(model, train_loader, eval_loader, name_to_save_model=None):
             continue
 
         # Decay learning rate
-        if (epoch+1) % 10 == 0:
+        if (epoch+1) % 5 == 0:
             curr_lr /= 2
             update_lr(optimizer, curr_lr)
 
@@ -186,7 +186,7 @@ def train_model(model, train_loader, eval_loader, name_to_save_model=None):
             .format(epoch+1, num_epochs, i+1, total_step, loss.item(), 100*cnt_correct/cnt_total))
 
         # Save model
-        if (epoch+1) % 5 == 0 or (epoch+1) == num_epochs:
+        if (epoch+1) % 1 == 0 or (epoch+1) == num_epochs:
             evaluate_model(model, eval_loader, num_to_eval=-1)
             if name_to_save_model is not None:
                 name_to_save = add_idx_suffix(name_to_save_model, int2str(epoch, len=3))

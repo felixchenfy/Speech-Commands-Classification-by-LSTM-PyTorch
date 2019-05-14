@@ -32,7 +32,7 @@ def cv2_image_f2i(img):
     return img
 
 
-def split_data(X, Y, USE_ALL=False, dtype='numpy'):
+def split_data(X, Y, eval_size=0.3, USE_ALL=False, dtype='numpy'):
     
     assert dtype in ['numpy', 'list']
 
@@ -45,7 +45,7 @@ def split_data(X, Y, USE_ALL=False, dtype='numpy'):
             te_X = np.copy(X)
             te_Y = np.copy(Y)
         else:
-            tr_X, te_X, tr_Y, te_Y = train_test_split(X, Y, test_size=0.3, random_state=14123)
+            tr_X, te_X, tr_Y, te_Y = train_test_split(X, Y, test_size=eval_size, random_state=14123)
     elif dtype == 'list':
         print("Data size = {}, feature dimension = {}".format(len(X), len(X[0])))
         if USE_ALL:
@@ -55,7 +55,7 @@ def split_data(X, Y, USE_ALL=False, dtype='numpy'):
             te_Y = Y[:]
         else:
             N = len(Y)
-            train_size = int(0.8 * N)
+            train_size = int((1-eval_size)*N)
             randidx = np.random.permutation(N)
             n1, n2 = randidx[0:train_size], randidx[train_size:]
             def get(arr_vals, arr_idx):

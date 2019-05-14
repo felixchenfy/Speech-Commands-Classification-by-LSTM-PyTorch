@@ -25,7 +25,9 @@ def load_classes(data_folder):
 
 if __name__=="__main__":
 
-    def extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y):
+    def extract_features_from_raw_data(
+        data_folder, fname_data_X, fname_data_Y,
+        if_data_aug):
         data_X = []
         data_Y = []
         classes = load_classes(data_folder)
@@ -51,7 +53,10 @@ if __name__=="__main__":
                 datas = [data]
 
                 # Data augmentation
-                NUM_AUGMENTS = 0 # Data augment reduce the performance
+                if if_data_aug:
+                    NUM_AUGMENTS = 5 # Data augment reduce the performance
+                else:
+                    NUM_AUGMENTS = 0
                 for i in range(NUM_AUGMENTS):
                     datas.append(data_augment(data, sample_rate))
 
@@ -94,13 +99,13 @@ if __name__=="__main__":
 
     plt.figure(figsize=(15, 6))
     
-    data_folder =  "data_src"
+    data_folder =  "data_train"
     fname_data_X = "train_X.csv"
     fname_data_Y = "train_Y.csv"
-    extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y)
+    extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y, if_data_aug=True)
 
 
     data_folder =  "data_test"
     fname_data_X = "test_X.csv"
     fname_data_Y = "test_Y.csv"
-    extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y)
+    extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y, if_data_aug=False)

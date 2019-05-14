@@ -134,7 +134,7 @@ def data_augment(data, sample_rate):
         return data * rate 
     
     data = add_noise(data, noise=rand_num(0.005))
-    data = shift_data(data, sample_rate, time=rand_num(val=0.1))
+    data = shift_data(data, sample_rate, time=rand_num(val=0.2))
     data = stretch(data, rate=1+rand_num(0.4))
     data = strength(data, rate=1+rand_num(0.4))
 

@@ -38,8 +38,8 @@ def test_mfcc_features(filename):
 
     
 filename = 'audio_1.wav'
-filename = 'data_src/one/audio_05-08-23-02-45-467k76k6aka.wav'
-# filename = 'data_src/backward/audio_05-08-23-34-44-9579o1vyzj5.wav'
+filename = 'data_train/one/audio_05-08-23-02-45-467k76k6aka.wav'
+# filename = 'data_train/backward/audio_05-08-23-34-44-9579o1vyzj5.wav'
 
 test_mfcc_features(filename)
 

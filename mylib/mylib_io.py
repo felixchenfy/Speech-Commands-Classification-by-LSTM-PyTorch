@@ -18,14 +18,17 @@ def play_audio(filename=None, data=None, sample_rate=None):
         subprocess.call(["cvlc", "--play-and-exit", filename])
 
 def read_audio(filename, PRINT=False):
-    data, sample_rate = sf.read(filename)
+    data, sample_rate = librosa.load(filename)
+    # data, sample_rate = sf.read(filename)
     if PRINT:
         print("Read audio file: {}. Audio len = {:.2}s, sample rate = {}, num points = {}".format(
             filename, data.size / sample_rate, sample_rate, data.size))
     return data, sample_rate
 
+
 def write_audio(filename, data, sample_rate):
-    sf.write(filename, data, sample_rate)
+    # sf.write(filename, data, sample_rate)
+    librosa.output.write_wav(filename, data, sample_rate)
 
 def write_list(filename, data):
     with open(filename, 'w') as f:
