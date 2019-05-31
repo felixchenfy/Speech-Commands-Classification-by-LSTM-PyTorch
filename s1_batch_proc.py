@@ -1,8 +1,8 @@
 import numpy as np 
-from mylib.mylib_feature_proc import *
-from mylib.mylib_io import *
-from mylib.mylib_commons import *
-from mylib.mylib_plot import *
+from utils.lib_feature_proc import *
+from utils.lib_io import *
+from utils.lib_commons import *
+from utils.lib_plot import *
 
 import sys, os
 CURR_PATH = os.path.dirname(os.path.abspath(__file__))+"/"
@@ -49,12 +49,12 @@ if __name__=="__main__":
                     write_audio(data_folder + "/" + label + ".wav", data, sample_rate)
                 
                 # Preprocess data
-                # data = remove_data_prefix(data, sample_rate)
+                # data = remove_silent_prefix(data, sample_rate)
                 datas = [data]
 
                 # Data augmentation
                 if if_data_aug:
-                    NUM_AUGMENTS = 5 # Data augment reduce the performance
+                    NUM_AUGMENTS = 3 
                 else:
                     NUM_AUGMENTS = 0
                 for i in range(NUM_AUGMENTS):
@@ -89,8 +89,8 @@ if __name__=="__main__":
 
 
         # Print info
-        print("data_X = List[List[]] = ({}, {})".format(len(data_X), len(data_X[0])))
-        print("data_Y = List         = {}".format(len(data_Y)))
+        print("data/data_X = List[List[]] = ({}, {})".format(len(data_X), len(data_X[0])))
+        print("data/data_Y = List         = {}".format(len(data_Y)))
 
         # Save
         write_list(fname_data_X, data_X)
@@ -99,13 +99,19 @@ if __name__=="__main__":
 
     plt.figure(figsize=(15, 6))
     
-    data_folder =  "data_train"
-    fname_data_X = "train_X.csv"
-    fname_data_Y = "train_Y.csv"
+    data_folder =  "data/data_train"
+    fname_data_X = "data/train_X.csv"
+    fname_data_Y = "data/train_Y.csv"
     extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y, if_data_aug=True)
 
 
-    data_folder =  "data_test"
-    fname_data_X = "test_X.csv"
-    fname_data_Y = "test_Y.csv"
-    extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y, if_data_aug=False)
+    # data_folder =  "data/data_test"
+    # fname_data_X = "data/test_X.csv"
+    # fname_data_Y = "data/test_Y.csv"
+    # extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y, if_data_aug=False)
+
+
+    # data_folder =  "data/data_test2"
+    # fname_data_X = "data/test2_X.csv"
+    # fname_data_Y = "data/test2_Y.csv"
+    # extract_features_from_raw_data(data_folder, fname_data_X, fname_data_Y, if_data_aug=True)

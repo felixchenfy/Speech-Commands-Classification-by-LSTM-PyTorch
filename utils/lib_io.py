@@ -8,7 +8,7 @@ import json
 import subprocess
 
 def play_audio(filename=None, data=None, sample_rate=None):
-    if filename is not None:
+    if filename:
         print("Play audio:", filename)
         subprocess.call(["cvlc", "--play-and-exit", filename])
     else:
@@ -19,6 +19,7 @@ def play_audio(filename=None, data=None, sample_rate=None):
 
 def read_audio(filename, PRINT=False):
     data, sample_rate = librosa.load(filename)
+    assert len(data.shape) == 1, "This project only support 1 dim audio."
     # data, sample_rate = sf.read(filename)
     if PRINT:
         print("Read audio file: {}. Audio len = {:.2}s, sample rate = {}, num points = {}".format(

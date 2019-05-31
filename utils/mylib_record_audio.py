@@ -41,7 +41,7 @@ class AudioRecorder(object):
             '-l', '--list-devices', action='store_true',
             help='show list of audio devices and exit')
         self.parser.add_argument(
-            '-d', '--device', type=self.int_or_str,
+            '-d', '--device', type=self.int_or_str, default='0',
             help='input device (numeric ID or substring)')
         self.parser.add_argument(
             '-r', '--samplerate', type=int, help='sampling rate')
@@ -171,7 +171,7 @@ class KeyboardMonitor(object):
             self._start_listen()
 
     def stop_listen(self):
-        if self.thread is not None:
+        if self.thread:
             self.thread.terminate()
 
     def _start_listen(self):
@@ -240,7 +240,7 @@ if __name__ == '__main__':
         if board.has_just_pressed():
 
             # start recording
-            recorder.start_record(folder='./data_tmp/') 
+            recorder.start_record(folder='./data/data_tmp/') 
 
             # wait until key release
             while not board.has_just_released():

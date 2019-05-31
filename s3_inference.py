@@ -2,20 +2,20 @@
 
 import numpy as np 
 import time
-from mylib.mylib_sklearn import *
-from mylib.mylib_plot import *
-from mylib.mylib_io import *
-from mylib.mylib_feature_proc import *
+from utils.lib_sklearn import *
+from utils.lib_plot import *
+from utils.lib_io import *
+from utils.lib_feature_proc import *
 import pickle
-from mylib.mylib_record_audio import *
+from utils.lib_record_audio import *
 
-from mylib.mylib_rnn import RNN, create_RNN_model
+from utils.lib_rnn import RNN, create_RNN_model
 
 import torch 
 import torch.nn as nn
 
 # load classifier model ---------------------------------------------
-save_audio_to = './data_tmp/'
+save_audio_to = './data/data_tmp/'
 classes = read_list("classes.csv")
 
 DO_INFERENCE = True
@@ -28,14 +28,14 @@ if DO_INFERENCE:
     print("Using the classifer of: ", MODEL_TO_USE)
 
     if MODEL_TO_USE == "sklearn": # sklearn
-        model_path = './models/sklearn_model2.pickle'
+        model_path = './models/model_014.pickle'
         with open(model_path, 'rb') as f:
             classifier_model = pickle.load(f)
 
     elif MODEL_TO_USE == "rnn": # RNN
         
-        model_path = 'models/rnn_0512_ep11_ac98.ckpt'
-        # model_path = 'models/rnn_0512_ep08_ac99.ckpt'
+        # model_path = 'models/rnn_0512_ep11_ac98.ckpt'
+        model_path = 'models/rnn_0512_ep08_ac99.ckpt'
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print("device for RNN: ", device)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                 data, sample_rate = read_audio(recorder.filename)
                 
                 # preprocess and extract features
-                data = remove_data_prefix(data, sample_rate)
+                data = remove_silent_prefix(data, sample_rate)
                 features = data_to_features(data, sample_rate)
 
                 # Predict
@@ -100,8 +100,8 @@ if __name__ == '__main__':
                 print("\nPredicted label: {}".format(predicted_label))
 
                 # Play the video of the predicted label
-                # play_audio(filename="data_train/result_is.wav")
-                play_audio(filename="data_train/" + predicted_label + ".wav")
+                # play_audio(filename="data/data_train/result_is.wav")
+                play_audio(filename="data/data_train/" + predicted_label + ".wav")
                 
             # reset for better printing
             print("\n")

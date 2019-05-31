@@ -1,9 +1,9 @@
 
 import numpy as np 
 import time
-from mylib.mylib_sklearn import *
-from mylib.mylib_plot import *
-from mylib.mylib_io import *
+from utils.lib_sklearn import *
+from utils.lib_plot import *
+from utils.lib_io import *
 
 train_X = read_list('train_X.csv')
 train_Y = read_list('train_Y.csv')

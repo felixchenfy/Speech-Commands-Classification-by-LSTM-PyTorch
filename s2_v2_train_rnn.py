@@ -2,8 +2,8 @@
 
 import numpy as np 
 import time
-from mylib.mylib_io import *
-from mylib.mylib_rnn import *
+from utils.lib_io import *
+from utils.lib_rnn import *
 
 import torch 
 import torch.nn as nn
@@ -17,18 +17,24 @@ IF_TRAIN_MODEL = True
 IF_LOAD_FROM_PRETRAINED = not IF_TRAIN_MODEL
 SAVE_MODEL_NAME = 'models/model.ckpt'
 
-LOAD_PRETRAINED_PATH = 'models/model_0510_ep14_ac98.ckpt'
+# LOAD_PRETRAINED_PATH = 'models/rnn_0510_ep14_ac98.ckpt'
+# LOAD_PRETRAINED_PATH = 'models/rnn_0512_ep08_ac99.ckpt'
+LOAD_PRETRAINED_PATH = 'models/rnn_0512_ep11_ac98.ckpt'
 
 # Load data -------------------------- 
-train_X = read_list('train_X.csv') # list[list]
-train_Y = read_list('train_Y.csv') # list
-test_X = read_list('test_X.csv') # list[list]
-test_Y = read_list('test_Y.csv') # list
+train_X = read_list('data/train_X.csv') # list[list]
+train_Y = read_list('data/train_Y.csv') # list
+if 1: # Test1 Dataset: 99% accu
+    test_X = read_list('data/test_X.csv') # list[list]
+    test_Y = read_list('data/test_Y.csv') # list
+else: # Test2 Dataset: 20% accu
+    test_X = read_list('data/test2_X.csv') # list[list]
+    test_Y = read_list('data/test2_Y.csv') # list
 classes = read_list("classes.csv") # list
-if 0: # evaluation set from part of the training set
-    # (There are augmented data in my training set.
-    #  So eval set and train set have similarity, which makes it bad for evaluation)
-    train_X, eval_X, train_Y, eval_Y = split_data(train_X, train_Y, USE_ALL=False, dtype='list')
+
+if 1: # evaluation set from part of the training set 
+    # (Use this if there is no data augmentation. Because we want the train and eval to be different)
+    train_X, eval_X, train_Y, eval_Y = split_data(train_X, train_Y, eval_size=0.1, USE_ALL=False, dtype='list')
 else: # evaluation set same as the test set
     eval_X, eval_Y = test_X, test_Y 
 

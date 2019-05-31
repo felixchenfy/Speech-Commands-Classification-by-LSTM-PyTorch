@@ -1,36 +1,31 @@
+if 1: # Set path
+    import sys, os
+    ROOT = os.path.dirname(os.path.abspath(__file__))+"/../" # root of the project
+    sys.path.append(ROOT)
+    
+import numpy as np 
+import time
+import types
 
 import torch 
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
-import numpy as np 
-import time
-import sys, os
-sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../")
-from mylib.mylib_commons import *
 
-# Hyper-parameters
-FEATURE_WITH_DIFFERENT_LENGTH = True
-if FEATURE_WITH_DIFFERENT_LENGTH:
-    input_size = 8  # In a sequency of features, the dimension of each feature == input_size
-    batch_size = 1
-    hidden_size = 64
-    num_layers = 3
-    num_classes = 10
-    num_epochs = 15
-    learning_rate = 0.0005
-    weight_decay = 0.00
-else:
-    input_size = 80
-    batch_size = 32
-    # sequency_len = 5
-    hidden_size = 32
-    num_layers = 3
-    num_classes = 10
-    num_epochs = 80
-    learning_rate = 0.01
-    weight_decay = 0.01
+
+if 1: # my lib
+    import utils.lib_proc_audio as lib_proc_audio
+    import utils.lib_plot as lib_plot
+    import utils.lib_io as lib_io
+    import utils.lib_commons as lib_commons
+
+
+def create_RNN_model(args, device, load_model_path=None):
+    model = RNN(args.input_size, args.hidden_size, args.num_layers, args.num_classes, device).to(device)
+    if load_model_path:
+        model.load_state_dict(torch.load(load_model_path))
+    return model
 
 # Recurrent neural network (many-to-one)
 class RNN(nn.Module):
@@ -67,47 +62,6 @@ class RNN(nn.Module):
         predicted_index = predicted.item()
         return predicted_index
 
-def create_RNN_model(model_path, device):
-    model = RNN(input_size, hidden_size, num_layers, num_classes, device).to(device)
-    model.load_state_dict(torch.load(model_path))
-    return model 
-
-class AudioDataset(Dataset):
-    def __init__(self, X, Y, input_size, transform=None):
-
-        self.num_samples = len(X)
-        self.input_size = input_size
-        self.transform = transform
-
-        # Set up Y
-        self.Y = torch.tensor(Y, dtype=torch.int64)
-
-        # Set up X
-        if FEATURE_WITH_DIFFERENT_LENGTH:
-            self.X = X # list[list]
-        else:
-            X = np.array(X)
-            self.sequence_length = X.shape[1] // input_size
-            X = X.reshape(-1, self.sequence_length, self.input_size).astype(np.float32)
-            self.X = torch.from_numpy(X)
-        return 
-
-    def __len__(self):
-        return len(self.Y)
-
-    def __getitem__(self, idx):
-
-        if FEATURE_WITH_DIFFERENT_LENGTH:
-            x = torch.tensor(self.X[idx], dtype=torch.float32)
-            feature_dim = len(self.X[idx])
-            time_len = feature_dim//self.input_size
-            x = x.reshape(time_len, self.input_size)
-        else:
-            x = self.X[idx]
-        sample = (x, self.Y[idx])
-        if self.transform:
-            sample = self.transform(sample)
-        return sample
 
 def evaluate_model(model, eval_loader, num_to_eval=-1):
     device = model.device
@@ -131,13 +85,14 @@ def evaluate_model(model, eval_loader, num_to_eval=-1):
     print('  Eval Accuracy on {} eval samples: {} %'.format(
         i+1, 100 * correct / total)) 
 
-def train_model(model, train_loader, eval_loader, name_to_save_model=None):
+
+def train_model(model, args, train_loader, eval_loader, name_to_save_model=None):
 
     device = model.device
 
     # Loss and optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
 
     # For updating learning rate
     def update_lr(optimizer, lr):    
@@ -146,9 +101,9 @@ def train_model(model, train_loader, eval_loader, name_to_save_model=None):
 
     # Train the model
     total_step = len(train_loader)
-    curr_lr = learning_rate
+    curr_lr = args.learning_rate
 
-    for epoch in range(num_epochs):
+    for epoch in range(args.num_epochs):
         cnt_correct, cnt_total = 0, 0
         for i, (featuress, labels) in enumerate(train_loader):
 
@@ -183,12 +138,12 @@ def train_model(model, train_loader, eval_loader, name_to_save_model=None):
 
         # Print accuracy
         print ('Epoch [{}/{}], Step [{}/{}], Loss = {:.4f}, Accuracy = {:.2f}' 
-            .format(epoch+1, num_epochs, i+1, total_step, loss.item(), 100*cnt_correct/cnt_total))
+            .format(epoch+1, args.num_epochs, i+1, total_step, loss.item(), 100*cnt_correct/cnt_total))
 
         # Save model
         if (epoch+1) % 1 == 0 or (epoch+1) == num_epochs:
             evaluate_model(model, eval_loader, num_to_eval=-1)
-            if name_to_save_model is not None:
+            if name_to_save_model:
                 name_to_save = add_idx_suffix(name_to_save_model, int2str(epoch, len=3))
                 torch.save(model.state_dict(), name_to_save)
                 print("-"*80)
@@ -196,24 +151,56 @@ def train_model(model, train_loader, eval_loader, name_to_save_model=None):
                 print("-"*80)
                 print("\n")
             print("")
+            
+            
+# ==========================================================================================
+# == Test 
+# ==========================================================================================
 
 def test_model_on_a_random_dataset():
 
+    args = types.SimpleNamespace()
+    args.input_size = 12  # In a sequency of features, the feature dimensions == input_size
+    args.batch_size = 1
+    args.hidden_size = 64
+    args.num_layers = 3
+    args.num_classes = 10
+    args.num_epochs = 15
+    args.learning_rate = 0.0005
+    args.weight_decay = 0.00
+ 
+    class Simple_AudioDataset(Dataset):
+        def __init__(self, X, Y, input_size, transform=None):
+            self.input_size = input_size
+            self.transform = transform
+            self.Y = torch.tensor(Y, dtype=torch.int64)
+            self.X = X # list[list]
+
+        def __len__(self):
+            return len(self.Y)
+
+        def __getitem__(self, idx):
+            x = torch.tensor(self.X[idx], dtype=torch.float32)
+            x = x.reshape(-1, self.input_size)
+            if self.transform:
+                sample = self.transform(x)
+            return (x, self.Y[idx])
+        
     # Create random data
     num_samples = 13
     sequence_length = 23
-    train_X = np.random.random((num_samples, sequence_length, input_size))
-    train_Y = np.random.randint(low=0, high=num_classes, size=(num_samples, ))
+    train_X = np.random.random((num_samples, sequence_length, args.input_size))
+    train_Y = np.random.randint(low=0, high=args.num_classes, size=(num_samples, ))
 
     # Convert data to list, which is the required data format
     train_X = [train_X[i].flatten().tolist() for i in range(num_samples)]
     train_Y = train_Y.tolist()
 
     # Construct dataset
-    train_dataset = AudioDataset(train_X, train_Y, input_size,)
+    train_dataset = Simple_AudioDataset(train_X, train_Y, args.input_size,)
     train_loader = torch.utils.data.DataLoader(
         dataset=train_dataset,
-        batch_size=batch_size, 
+        batch_size=args.batch_size, 
         shuffle=True)
     import copy
     eval_loader = copy.deepcopy(train_loader)
@@ -221,10 +208,10 @@ def test_model_on_a_random_dataset():
 
     # Create model
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = RNN(input_size, hidden_size, num_layers, num_classes, device).to(device)
+    model = create_RNN_model(args, device)
 
     # Train model on training set
-    train_model(model, train_loader, eval_loader, name_to_save_model=None)
+    train_model(model, args, train_loader, eval_loader, name_to_save_model=None)
 
     # Test model on test set
     model.eval()    

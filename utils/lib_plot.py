@@ -5,6 +5,13 @@ import soundfile as sf
 import librosa
 import librosa.display
 import cv2
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+from sklearn.utils.multiclass import unique_labels
+
+# ----------------------------------------------------
+# -- Plot audio data
+# ----------------------------------------------------
 
 
 def cv2_imshow(img, window_name="window name"):
@@ -13,33 +20,47 @@ def cv2_imshow(img, window_name="window name"):
     cv2.destroyAllWindows()
     return q 
 
-
-def plot_audio(data, sample_rate, yrange=(-1.5, 1.5)):
+def plot_audio(data, sample_rate, yrange=(-1.1, 1.1)):
+    plt.figure(figsize=(8, 5))
     t = np.arange(len(data)) / sample_rate
     plt.plot(t, data)
     plt.xlabel('time (s)')
     plt.ylabel('Intensity')
-    plt.title('Audio data')
+    plt.title(f'Audio with {len(data)} points, and a {sample_rate} sample rate, ')
     plt.axis([None, None, yrange[0], yrange[1]])
 
-def plot_mfcc(mfccs, sample_rate, method='librosa'):
-    if method == "librosa":
-        librosa.display.specshow(mfccs, sr=sample_rate, x_axis='time')
+def plot_mfcc(mfcc, sample_rate, method='librosa'):
+    plt.figure(figsize=(8, 5))
+    assert method in ['librosa', 'cv2']
+    
+    if method == 'librosa':
+        librosa.display.specshow(
+            mfcc, sr=sample_rate, x_axis='time')
         plt.colorbar()
-        plt.title('MFCC')
+        plt.title(f'MFCC features, len = {mfcc.shape[1]}')
         plt.tight_layout()
-    elif method == "cv2":
-        cv2_imshow(mfccs)
-    elif method == "hist":
-        plt.imshow(mfccs)
-        plt.xlabel('Times')
-        plt.ylabel('Frequency')
+    
+    elif method == 'cv2':
+        cv2.imshow("MFCC features", mfcc)
+        q = cv2.waitKey()
+        cv2.destroyAllWindows()
+
+def plot_mfcc_histogram(
+        mfcc_histogram, bins, binrange, col_divides,
+    ): 
+    plt.figure(figsize=(15, 5))
+    # Plot by plt
+    plt.imshow(mfcc_histogram)
+    
+    # Add notations
+    plt.xlabel(f'{bins} bins, {binrange} range, and {col_divides} columns')
+    plt.ylabel("Each feature's count")
+    plt.title("Histogram of mfcc features")
+    plt.colorbar()
 
 # ----------------------------------------------------
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
-from sklearn.utils.multiclass import unique_labels
-
+# -- Plot machine learning results
+# ----------------------------------------------------
 
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,
