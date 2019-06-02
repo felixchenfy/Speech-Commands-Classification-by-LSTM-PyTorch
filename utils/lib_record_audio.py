@@ -5,7 +5,8 @@ import time
 from pynput import keyboard
 from multiprocessing import Process, Value
 import subprocess
-
+import librosa
+    
 
 if 1: # for AudioRecorder
     import sounddevice as sd
@@ -13,6 +14,15 @@ if 1: # for AudioRecorder
     import numpy as np  
     import argparse, tempfile, queue, sys, datetime
 
+def reset_audio_sample_rate(filename, dst_sample_rate):
+    # dst_sample_rate = 16000, see "def stop_record"
+    data, sample_rate = sf.read(filename) 
+    if (dst_sample_rate is not None) and (dst_sample_rate != sample_rate):
+        data = librosa.core.resample(data, sample_rate, dst_sample_rate)
+        sample_rate = dst_sample_rate
+    sf.write(filename, data, sample_rate)
+    # print(f"Reset sample rate to {dst_sample_rate} for the file: {filename}")
+    
 class TimerPrinter(object):
     # Print a message with a time gap of "T_gap"
     def __init__(self):
@@ -79,8 +89,15 @@ class AudioRecorder(object):
             args=())
         self.thread_record.start()
 
-    def stop_record(self):
-
+    def stop_record(self, sample_rate=16000):
+        '''
+        Input:
+            sample_rate: desired sample rate. The original audio's sample rate is determined by
+                the hardware configuration. Here, to achieve the desired sample rate, 
+                this script will read the saved audio from file, resample it, 
+                and then save it back to file.
+        '''
+        
         # Stop thread
         self.thread_record.terminate()
         # self._thread_alive = False # This seems not working
@@ -93,6 +110,7 @@ class AudioRecorder(object):
         # Check result
         time_duration = time.time() - self.audio_time0
         self.check_audio(time_duration)
+        reset_audio_sample_rate(self.filename, sample_rate)
 
     def record(self):
 
@@ -249,5 +267,5 @@ if __name__ == '__main__':
 
             # stop recording
             recorder.stop_record()
-
-        time.sleep(0.1)
+            
+        time.sleep(0.05)

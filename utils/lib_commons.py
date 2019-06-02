@@ -4,7 +4,8 @@ import numpy as np
 import cv2
 import sys, os
 import glob
-        
+import time
+
 def create_folder(folder):
     print("Creating folder:", folder)
     if not os.path.exists(folder):
@@ -21,6 +22,13 @@ def get_filenames(folder, file_types=('*.wav',)):
     filenames.sort()
     return filenames
 
+def get_dir_names(folder):
+    names = [name for name in os.listdir(folder) if os.path.isdir(name)] 
+    return names 
+
+def get_all_names(folder):
+    return os.listdir(folder)
+
 def change_suffix(s, new_suffix, index=None):
     i = s.rindex('.')
     si = ""
@@ -32,9 +40,9 @@ def change_suffix(s, new_suffix, index=None):
 def int2str(num, len):
     return ("{:0"+str(len)+"d}").format(num)
 
-def add_idx_suffix(s, idx):
+def add_idx_suffix(s, idx): # /data/two.wav -> /data/two_032.wav
     i = s.rindex('.')
-    s = s[:i] + "_" + str(idx) + s[i:]
+    s = s[:i] + "_" + "{:03d}".format(idx) + s[i:]
     return s 
 
 def cv2_image_float_to_int(img):
@@ -45,6 +53,13 @@ def cv2_image_float_to_int(img):
         img = cv2.resize(img, (int(col*rate), int(row*rate)))
     return img
 
+class Timer(object):
+    def __init__(self):
+        self.t0 = time.time()
+    def report_time(self, event="", prefix=""):
+        print(prefix + "Time cost of '{}' is: {:.2f} seconds.".format(
+            event, time.time() - self.t0
+        ))
 
 if __name__=="__main__":
     print(change_suffix("abc.jpg", new_suffix='avi'))

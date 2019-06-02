@@ -9,7 +9,8 @@ import numpy as np
 import cv2
 import librosa
 import warnings
-
+import scipy
+from scipy import signal
 
 # How long is a mfcc data frame ?        
 MFCC_RATE = 50 # TODO: It's about 1/50 s, I'm not sure.
@@ -34,40 +35,45 @@ if 1: # Basic maths
 # ----------------------------------------------------------------------
 
 if 1: # Time domain processings
-    def filter_audio_by_average(audio, sample_rate, window_seconds):
-        ''' Replace audio[j] with np.mean(audio[i:j]) '''
+    
+    def resample_audio(data, sample_rate, new_sample_rate):
+        data = librosa.core.resample(data, sample_rate, new_sample_rate)
+        return data, new_sample_rate
+
+    def filter_audio_by_average(data, sample_rate, window_seconds):
+        ''' Replace audio data[j] with np.mean(data[i:j]) '''
         ''' 
         Output:
-            audio with same length
+            audio data with same length
         '''
         
         window_size = int(window_seconds * sample_rate)
         
         if 1: # Compute integral arr, then find interval sum
-            sums = integral(audio)
-            res = [0]*len(audio)
-            for i in range(1, len(audio)):
+            sums = integral(data)
+            res = [0]*len(data)
+            for i in range(1, len(data)):
                 prev = max(0, i - window_size)
                 res[i] = (sums[i] - sums[prev]) / (i - prev)
         else: # Use numpy built-in
-            filter_by_average(audio, window_size)
+            filter_by_average(data, window_size)
             
         return res
 
 
     def remove_silent_prefix_by_freq_domain(
-            audio, sample_rate, n_mfcc, threshold, padding_s=0.2,
+            data, sample_rate, n_mfcc, threshold, padding_s=0.2,
             return_mfcc=False):
         
         # Compute mfcc, and remove silent prefix
-        mfcc_src = compute_mfcc(audio, sample_rate, n_mfcc)
+        mfcc_src = compute_mfcc(data, sample_rate, n_mfcc)
         mfcc_new = remove_silent_prefix_of_mfcc(mfcc_src, threshold, padding_s)
 
-        # Project len(mfcc) to len(audio)
+        # Project len(mfcc) to len(data)
         l0 = mfcc_src.shape[1]
         l1 = mfcc_new.shape[1]
-        start_idx = int(audio.size * (1 - l1 / l0))
-        new_audio = audio[start_idx:]
+        start_idx = int(data.size * (1 - l1 / l0))
+        new_audio = data[start_idx:]
         
         # Return
         if return_mfcc:        
@@ -76,7 +82,7 @@ if 1: # Time domain processings
             return new_audio
             
     def remove_silent_prefix_by_time_domain(
-            audio, sample_rate, threshold=0.25, window_s=0.1, padding_s=0.2):
+            data, sample_rate, threshold=0.25, window_s=0.1, padding_s=0.2):
         ''' Remove silent prefix of audio, by checking voice intensity in time domain '''
         ''' 
             threshold: voice intensity threshold. Voice is in range [-1, 1].
@@ -84,26 +90,49 @@ if 1: # Time domain processings
             padding_s: padding time (seconds) at the left of the audio.
         '''
         window_size = int(window_s * sample_rate)
-        trend = filter_by_average(abs(audio), window_size)
+        trend = filter_by_average(abs(data), window_size)
         start_idx = np.argmax(trend > threshold)
         start_idx = max(0, start_idx + window_size//2 - int(padding_s*sample_rate))
-        return audio[start_idx:]
+        return data[start_idx:]
 
 
 
 # ----------------------------------------------------------------------
 if 1: # Frequency domain processings (on mfcc)
     
-    def compute_mfcc(audio, sample_rate, n_mfcc=12):
-        # Extract MFCC features
-        # https://librosa.github.io/librosa/generated/librosa.feature.mfcc.html
-        mfcc = librosa.feature.mfcc(
-            y=audio,
-            sr=sample_rate,
-            n_mfcc=n_mfcc,   # How many mfcc features to use? 12 at most.
-                        # https://dsp.stackexchange.com/questions/28898/mfcc-significance-of-number-of-features
-        )
-        return mfcc 
+    def compute_mfcc(data, sample_rate, n_mfcc=12):
+        if 1:
+            # Extract MFCC features
+            # https://librosa.github.io/librosa/generated/librosa.feature.mfcc.html
+            mfcc = librosa.feature.mfcc(
+                y=data,
+                sr=sample_rate,
+                n_mfcc=n_mfcc,   # How many mfcc features to use? 12 at most.
+                            # https://dsp.stackexchange.com/questions/28898/mfcc-significance-of-number-of-features
+            )
+            return mfcc 
+        else:
+            freq, spectrogram = compute_log_specgram(data, sample_rate)
+            spectrogram = spectrogram[0:n_mfcc, :]
+            return spectrogram
+        
+    def compute_log_specgram(audio, sample_rate, window_size=20,
+                    step_size=10, eps=1e-10):
+        nperseg = int(round(window_size * sample_rate / 1e3))
+        noverlap = int(round(step_size * sample_rate / 1e3))
+        freqs, _, spec = signal.spectrogram(audio,
+                                        fs=sample_rate,
+                                        window='hann',
+                                        nperseg=nperseg,
+                                        noverlap=noverlap,
+                                        detrend=False)
+        MAX_FREQ = 9999999999999
+        for i in range(len(freqs)):
+            if freqs[i] > MAX_FREQ:
+                break 
+        freqs = freqs[0:i]
+        spec = spec[:, 0:i]
+        return freqs, np.log(spec.T.astype(np.float32) + eps)
 
     def remove_silent_prefix_of_mfcc(mfcc, threshold, padding_s=0.2):
         '''
