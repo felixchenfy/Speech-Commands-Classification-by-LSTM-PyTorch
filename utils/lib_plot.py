@@ -20,8 +20,9 @@ def cv2_imshow(img, window_name="window name"):
     cv2.destroyAllWindows()
     return q 
 
-def plot_audio(data, sample_rate, yrange=(-1.1, 1.1)):
-    plt.figure(figsize=(8, 5))
+def plot_audio(data, sample_rate, yrange=(-1.1, 1.1), ax=None):
+    if ax is None:
+        plt.figure(figsize=(8, 5))
     t = np.arange(len(data)) / sample_rate
     plt.plot(t, data)
     plt.xlabel('time (s)')
@@ -29,19 +30,20 @@ def plot_audio(data, sample_rate, yrange=(-1.1, 1.1)):
     plt.title(f'Audio with {len(data)} points, and a {sample_rate} sample rate, ')
     plt.axis([None, None, yrange[0], yrange[1]])
 
-def plot_mfcc(mfcc, sample_rate, method='librosa'):
-    plt.figure(figsize=(8, 5))
+def plot_mfcc(mfcc, sample_rate, method='librosa', ax=None):
+    if ax is None:
+        plt.figure(figsize=(8, 5))
     assert method in ['librosa', 'cv2']
     
     if method == 'librosa':
         librosa.display.specshow(
             mfcc, sr=sample_rate, x_axis='time')
         plt.colorbar()
-        plt.title(f'MFCC features, len = {mfcc.shape[1]}')
+        plt.title(f'MFCCs features, len = {mfcc.shape[1]}')
         plt.tight_layout()
     
     elif method == 'cv2':
-        cv2.imshow("MFCC features", mfcc)
+        cv2.imshow("MFCCs features", mfcc)
         q = cv2.waitKey()
         cv2.destroyAllWindows()
 
@@ -53,9 +55,9 @@ def plot_mfcc_histogram(
     plt.imshow(mfcc_histogram)
     
     # Add notations
-    plt.xlabel(f'{bins} bins, {binrange} range, and {col_divides} columns')
-    plt.ylabel("Each feature's count")
-    plt.title("Histogram of mfcc features")
+    plt.xlabel(f'{bins} bins, {binrange} range, and {col_divides} columns(pieces)')
+    plt.ylabel("Each feature's percentage")
+    plt.title("Histogram of MFCCs features")
     plt.colorbar()
 
 # ----------------------------------------------------

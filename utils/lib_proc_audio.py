@@ -101,21 +101,16 @@ if 1: # Time domain processings
 if 1: # Frequency domain processings (on mfcc)
     
     def compute_mfcc(data, sample_rate, n_mfcc=12):
-        if 1:
-            # Extract MFCC features
-            # https://librosa.github.io/librosa/generated/librosa.feature.mfcc.html
-            mfcc = librosa.feature.mfcc(
-                y=data,
-                sr=sample_rate,
-                n_mfcc=n_mfcc,   # How many mfcc features to use? 12 at most.
-                            # https://dsp.stackexchange.com/questions/28898/mfcc-significance-of-number-of-features
-            )
-            return mfcc 
-        else:
-            freq, spectrogram = compute_log_specgram(data, sample_rate)
-            spectrogram = spectrogram[0:n_mfcc, :]
-            return spectrogram
-        
+        # Extract MFCC features
+        # https://librosa.github.io/librosa/generated/librosa.feature.mfcc.html
+        mfcc = librosa.feature.mfcc(
+            y=data,
+            sr=sample_rate,
+            n_mfcc=n_mfcc,   # How many mfcc features to use? 12 at most.
+                        # https://dsp.stackexchange.com/questions/28898/mfcc-significance-of-number-of-features
+        )
+        return mfcc 
+    
     def compute_log_specgram(audio, sample_rate, window_size=20,
                     step_size=10, eps=1e-10):
         nperseg = int(round(window_size * sample_rate / 1e3))

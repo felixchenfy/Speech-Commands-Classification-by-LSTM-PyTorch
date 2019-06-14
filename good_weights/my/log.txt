@@ -1,0 +1,37 @@
+Args:
+	input_size          : 12
+	batch_size          : 1
+	hidden_size         : 64
+	num_layers          : 3
+	num_epochs          : 10
+	learning_rate       : 0.001
+	learning_rate_decay_interval: 5
+	learning_rate_decay_rate: 0.5
+	weight_decay        : 0.0
+	gradient_accumulations: 16
+	load_weights_from   : good_weights/kaggle.ckpt
+	finetune_model      : True
+	device              : cuda
+	data_folder         : data/data_train/
+	train_eval_test_ratio: [0.7, 0.3, 0.0]
+	do_data_augment     : True
+	classes_txt         : config/classes.names
+	num_classes         : 11
+	plot_accu           : True
+	show_plotted_accu   : False
+	save_model_to       : checkpoints/
+	save_log_to         : checkpoints/log.txt
+	save_fig_to         : checkpoints/fig.jpg
+
+Accuracies:
+	Epoch     Train     Eval      Test      
+	1         0.760     0.969     -0.100    
+	2         0.965     0.990     -0.100    
+	3         0.985     0.990     -0.100    
+	4         0.991     0.995     -0.100    
+	5         0.996     0.998     -0.100    
+	6         0.996     0.998     -0.100    
+	7         0.999     0.998     -0.100    
+	8         0.998     0.995     -0.100    
+	9         1.000     1.000     -0.100    
+	10        0.999     0.998     -0.100    

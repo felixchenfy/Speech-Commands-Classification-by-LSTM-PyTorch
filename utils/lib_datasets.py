@@ -25,6 +25,7 @@ from collections import namedtuple
 import copy 
 from gtts import gTTS
 import subprocess
+import glob
 
 import torch
 from torch.utils.data import Dataset
@@ -100,7 +101,6 @@ class AudioDataset(Dataset):
         
         timer = lib_commons.Timer()
         
-        
         # -- Load audio
         if self.bool_cache_audio:
             audio = self.get_audio(idx)
@@ -115,7 +115,7 @@ class AudioDataset(Dataset):
                 audio = AudioClass(filename=filename)
         
         # -- Compute features
-        read_features_from_cache = (not self.bool_cache_XY) and (idx in self.cached_XY) and (not self.transform)
+        read_features_from_cache = (self.bool_cache_XY) and (idx in self.cached_XY) and (not self.transform)
         
         # Read features from cache: 
         #   If already computed, and no augmentatation (transform), then read from cache
@@ -138,7 +138,7 @@ class AudioDataset(Dataset):
             Y = self.files_label[idx]
             
             # Cache 
-            if self.bool_cache_XY:
+            if self.bool_cache_XY and (not self.transform):
                 self.cached_XY[idx] = (X, Y)
             
         # print("{:>20}, len={:.3f}s, file={}".format("After transform", audio.get_len_s(), audio.filename))
@@ -232,15 +232,27 @@ class AudioClass(object):
         print(f"Audio after removing silence: {l0} s --> {l0} s")
         
     # --------------------------- Plotting ---------------------------
-    def plot_audio(self, plt_show=False):
-        lib_plot.plot_audio(self.data, self.sample_rate)
+    def plot_audio(self, plt_show=False, ax=None):
+        lib_plot.plot_audio(self.data, self.sample_rate, ax=ax)
         if plt_show: plt.show()
             
-    def plot_mfcc(self, method='librosa', plt_show=False):
+    def plot_mfcc(self, method='librosa', plt_show=False, ax=None):
         self._check_and_compute_mfcc()
-        lib_plot.plot_mfcc(self.mfcc, self.sample_rate, method)
+        lib_plot.plot_mfcc(self.mfcc, self.sample_rate, method, ax=ax)
         if plt_show: plt.show()
+        
+    def plot_audio_and_mfcc(self, plt_show=False, figsize=(12, 5)):
+        plt.figure(figsize=figsize)
+        
+        plt.subplot(121)
+        lib_plot.plot_audio(self.data, self.sample_rate, ax=plt.gca())
 
+        plt.subplot(122)
+        self._check_and_compute_mfcc()
+        lib_plot.plot_mfcc(self.mfcc, self.sample_rate, method='librosa', ax=plt.gca())
+
+        if plt_show: plt.show()
+        
     def plot_mfcc_histogram(self, plt_show=False):
         if self.mfcc_histogram is None:
             self.compute_mfcc_histogram()
@@ -265,12 +277,12 @@ class AudioClass(object):
         
 def synthesize_audio(
         text, sample_rate=16000, 
-        lang='en', tmp_filename = ".tmp_audio_from_SynthesizedAudio.wav",
+        lang='en', tmp_filename=".tmp_audio_from_SynthesizedAudio.wav",
         PRINT=False):
         
     # Create audio
     assert lang in ['en', 'en-uk', 'en-au', 'en-in'] # 4 types of acsents to choose
-    if PRINT: print("Synthesizing audio ...", end=' ')
+    if PRINT: print(f"Synthesizing audio for '{text}'...", end=' ')
     tts = gTTS(text=text, lang=lang)
     
     # Save to file and load again
@@ -285,24 +297,62 @@ def synthesize_audio(
     
     return audio
 
+def shout_out_result(
+    filename, predicted_label, 
+    preposition_word="is",
+    cache_folder="data/examples/"):
 
-def test_Class_AudioData():
-    audio = AudioClass(filename="test_data/audio_1.wav")
-    audio.plot_audio()
-    audio.plot_mfcc()
-    audio.plot_mfcc_histogram()
-    
-    plt.show()
-    # audio.play_audio()
+    if not os.path.exists(cache_folder): # create folder
+        os.makedirs(cache_folder)
+        
+    fname_preword = cache_folder + preposition_word + ".wav" # create file
+    if not os.path.exists(fname_preword):
+        synthesize_audio(text=preposition_word, PRINT=True
+                         ).write_to_file(filename=fname_preword)
 
-def test_synthesize_audio():
-    audio = synthesize_audio("none", PRINT=True)
-    audio.play_audio()
-    audio.write_to_file("synthesized_audio.wav")
-    
-def main():
-    # test_Class_AudioData()
-    test_synthesize_audio()
+    fname_predict =cache_folder + predicted_label + ".wav" # create file
+    if not os.path.exists(fname_predict): 
+        synthesize_audio(text=predicted_label, PRINT=True
+                         ).write_to_file(filename=fname_predict)
+        
+    lib_io.play_audio(filename=filename)
+    lib_io.play_audio(filename=fname_preword)
+    lib_io.play_audio(filename=fname_predict)
+
+def get_wav_filenames(path_to_data):
+    ''' Only audio data with .wav suffix are supported by this script '''
+    if os.path.isdir(path_to_data):
+        filenames = glob.glob(path_to_data + "/*.wav")
+        assert len(filenames), f"No .wav files in folder: {path_to_data}"
+    elif ".wav" in path_to_data:
+        filenames = [path_to_data]
+    else:
+        raise ValueError('Wrong path_to_data. Only .wav file is supported')
+    return filenames
+
 
 if __name__ == "__main__":
+    
+    def test_Class_AudioData():
+        audio = AudioClass(filename="test_data/audio_1.wav")
+        audio.plot_audio()
+        audio.plot_mfcc()
+        audio.plot_mfcc_histogram()
+        
+        plt.show()
+        # audio.play_audio()
+
+    def test_synthesize_audio():
+        texts = ["hello"]
+        texts = lib_io.read_list("config/classes_kaggle.names")
+        for text in texts:
+            audio = synthesize_audio(text, PRINT=True)
+            audio.play_audio()
+            # audio.write_to_file(f"synthesized_audio_{text}.wav")
+            audio.write_to_file(f"{text}.wav")
+        
+    def main():
+        # test_Class_AudioData()
+        test_synthesize_audio()
+
     main()

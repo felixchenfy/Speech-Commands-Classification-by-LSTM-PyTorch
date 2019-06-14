@@ -6,7 +6,7 @@ from pynput import keyboard
 from multiprocessing import Process, Value
 import subprocess
 import librosa
-    
+import os 
 
 if 1: # for AudioRecorder
     import sounddevice as sd
@@ -76,6 +76,9 @@ class AudioRecorder(object):
     def start_record(self, folder='./'):
         
         # Some settings
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+            
         self.filename = tempfile.mktemp(
             prefix=folder + 'audio_' + self.get_time(),
             suffix='.wav',
@@ -142,7 +145,7 @@ class AudioRecorder(object):
             self.delete_file(self.filename)
             print("Audio is too short. It's been deleted.")
         else:
-            print('Recording is good: ' + self.filename)
+            print('Recorded audio is saved to: ' + self.filename)
         print("-"*80  + "\n\n")
 
 

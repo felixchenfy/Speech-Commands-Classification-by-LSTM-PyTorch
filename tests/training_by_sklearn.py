@@ -34,7 +34,7 @@ if model.model_name=="Neural Net":
     
     # Save trained model to file
     import pickle
-    path_to_save_model = './models/trained_classifier.pickle'
+    path_to_save_model = './checkpoints/trained_classifier.pickle'
     
     with open(path_to_save_model, 'wb') as f:
         pickle.dump(model, f)

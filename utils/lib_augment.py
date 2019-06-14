@@ -40,7 +40,23 @@ def to_tuple(val, left_bound=None):
             return (-val, val)
         else:
             return (left_bound, val)
-    
+
+def random_crop(arr, N): 
+    # crop a subarray from array, which has an exact length of N.
+    # If len(arr)<N, arr will be duplicated first to make the length > N
+    n = len(arr)
+    if n < N:
+        arr = np.tile(arr, 1+(N//n))
+    n = len(arr) # e.g. n=10, N=9, n-N=1, left=[0, 1]=0, right=[9, 10]
+    left = np.random.randint(n - N + 1)
+    right = left + N
+    return arr[left:right]
+    ''' Test case:
+    for i in range(5):
+        x = np.arange(10)
+        print(random_crop(x, 10))
+    '''
+            
 class Augmenter(object):
     ''' A wrapper for a serials of transformations '''
     
@@ -71,7 +87,7 @@ class Augmenter(object):
             assert len(audio.data) > 0
             return audio
 
-    # Add noise to audio, where noise come from file
+    # Add noise to audio, where noises are loaded from file and normalized
     class Noise(object):
         def __init__(self, noise_folder, prob_noise=0.5, intensity=(0, 0.5)):
             self.intensity = to_tuple(intensity)
@@ -95,7 +111,7 @@ class Augmenter(object):
             
             # add noise
             noise = self.randomly_pick_a_noise() * rand_uniform(self.intensity)
-            data = data + self.random_crop(noise, len(data))
+            data = data + random_crop(noise, len(data))
             data[data>+1] = +1
             data[data<-1] = -1
                 
@@ -116,20 +132,7 @@ class Augmenter(object):
                 noise = np.tile(noise, 1+(N//n))
             return noise
         
-        def random_crop(self, arr, N): 
-            # crop N-len subarray from array
-            n = len(arr)
-            if n < N:
-                arr = np.tile(arr, 1+(N//n))
-            n = len(arr) # e.g. n=10, N=9, n-N=1, left=[0, 1]=0, right=[9, 10]
-            left = np.random.randint(n - N + 1)
-            right = left + N
-            return arr[left:right]
-            ''' Test case:
-            for i in range(5):
-                x = np.arange(10)
-                print(random_crop(x, 10))
-            '''
+        
             
 
     # Shift audio by some time or ratio (>0, to right; <0, to left)
@@ -175,6 +178,25 @@ class Augmenter(object):
             return audio
          
     
+    # Crop out a certain time length 
+    class Crop(object):
+        def __init__(self, time=None):
+            assert isinstance(time, tuple) or isinstance(time, list)
+            self.time = to_tuple(time)
+            
+        def __call__(self, audio):
+            time = rand_uniform(self.time) # seconds
+            data = audio.data 
+            n = abs(int(time * audio.sample_rate)) # length to crop
+            
+            # crop
+            if n < len(data):
+                data = random_crop(data, n)
+
+            # return
+            audio.data = data
+            assert len(audio.data) > 0
+            return audio
 
     # Pad zeros randomly at left or right by a time or rate >= 0
     class PadZeros(object):
@@ -263,31 +285,31 @@ class Augmenter(object):
 
 def test_augmentation_effects():
     from utils.lib_io import read_audio, write_audio, play_audio
+    import copy
 
     filename = 'test_data/audio_3.wav'
     output_name = 'test_data/tmp_audio.wav'
     audio = AudioClass(filename=filename)
     print("Audio length = ", audio.get_len_s(), " seconds")
     
-    if 1: # Augment
-        import copy
-        for i in range(5):
-            print(i)
-            
-            # Set up augmenter
-            aug = Augmenter([
-                Augmenter.PadZeros(time=(0.1, 0.3)),
-                # Augmenter.Noise(noise_folder="data/noises/", 
-                #                 prob_noise=0.6, intensity=(0.1, 0.4)),
-                # Augmenter.Shift(rate=0.5, keep_size=False),
-                # Augmenter.PlaySpeed(rate=(1.4, 1.5), keep_size=True),
-                # Augmenter.Amplify(rate=(2, 2)),
-            ])
+    for i in range(5): # Test for several times, to see if RANDOM works
+        print(i)
+        
+        # Set up augmenter
+        aug = Augmenter([
+            Augmenter.Crop(time=(0.5, 1.3)),
+            # Augmenter.PadZeros(time=(0.1, 0.3)),
+            # Augmenter.Noise(noise_folder="data/noises/", 
+            #                 prob_noise=0.6, intensity=(0.1, 0.4)),
+            # Augmenter.Shift(rate=0.5, keep_size=False),
+            # Augmenter.PlaySpeed(rate=(1.4, 1.5), keep_size=True),
+            # Augmenter.Amplify(rate=(2, 2)),
+        ])
 
-            # Augment    
-            audio_copy = copy.deepcopy(audio)
-            aug(audio_copy)
-            audio_copy.play_audio()
+        # Augment    
+        audio_copy = copy.deepcopy(audio)
+        aug(audio_copy)
+        audio_copy.play_audio()
 
     audio = audio_copy
     

@@ -35,12 +35,13 @@ def set_default_args():
     # training params
     args.num_epochs = 100
     args.learning_rate = 0.0001
-    args.learning_rate_decay_interval = 5 # decay for every 5 intervals
-    args.learning_rate_decay_rate = 0.2 # lr = lr * rate
+    args.learning_rate_decay_interval = 5 # decay for every 5 epochs
+    args.learning_rate_decay_rate = 0.5 # lr = lr * rate
     args.weight_decay = 0.00
+    args.gradient_accumulations = 16 # number of gradient accums before step
     
     # training params2
-    args.load_model_from = None
+    args.load_weights_from = None
     args.finetune_model = False # If true, fix all parameters except the fc layer
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -57,7 +58,7 @@ def set_default_args():
     # log setting
     args.plot_accu = True # if true, plot accuracy for every epoch
     args.show_plotted_accu = False # if false, not calling plt.show(), so drawing figure in background
-    args.save_model_to = 'models/' # Save model and log file
+    args.save_model_to = 'checkpoints/' # Save model and log file
         #e.g: model_001.ckpt, log.txt, log.jpg
     
     return args 
@@ -79,14 +80,12 @@ def load_weights(model, weights, PRINT=False):
             
         model_shape = model_state[name].shape
         if model_shape != param.shape:
-            if PRINT:
-                print(f"\nSize of {name} layer is different between model and weights. Not copy parameters.")
-                print(f"\tModel shape = {model_shape}, weights' shape = {param.shape}.")
-            continue
-
-        model_state[name].copy_(param)
+            print(f"\nWarning: Size of {name} layer is different between model and weights. Not copy parameters.")
+            print(f"\tModel shape = {model_shape}, weights' shape = {param.shape}.")
+        else:
+            model_state[name].copy_(param)
         
-def create_RNN_model(args, load_model_from=None):
+def create_RNN_model(args, load_weights_from=None):
     ''' A wrapper for creating a 'class RNN' instance '''
     
     
@@ -100,34 +99,35 @@ def create_RNN_model(args, load_model_from=None):
     model = RNN(args.input_size, args.hidden_size, args.num_layers, args.num_classes, device).to(device)
     
     # Load weights
-    if load_model_from:
-        print("Load weights from ", load_model_from)
-        weights = torch.load(load_model_from)
+    if load_weights_from:
+        print(f"Load weights from: {load_weights_from}")
+        weights = torch.load(load_weights_from)
         load_weights(model, weights)
     
     return model
 
 # Recurrent neural network (many-to-one)
 class RNN(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, num_classes, device):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes, device, classes=None):
         super(RNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, num_classes)
         self.device = device
+        self.classes = classes
 
     def forward(self, x):
-        # Set initial hidden and cell states 
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device) # 2, 100, 128
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device) # 2, 100, 128
+        # Set initial hidden and cell states
+        batch_size = x.size(0)
+        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device) 
+        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device) 
         
         # Forward propagate LSTM
-        out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size): 100, 28, 28
+        out, _ = self.lstm(x, (h0, c0))  # shape = (batch_size, seq_length, hidden_size)
         
         # Decode the hidden state of the last time step
-        # out[:, -1, :] is the last block in sequence
-        out = self.fc(out[:, -1, :]) # 100, 10
+        out = self.fc(out[:, -1, :])
         return out
 
     def predict(self, x):
@@ -142,8 +142,21 @@ class RNN(nn.Module):
         predicted_index = predicted.item()
         return predicted_index
     
+    def set_classes(self, classes):
+        self.classes = classes 
+    
+    def predict_audio_label(self, audio):
+        idx = self.predict_audio_label_index(audio)
+        assert self.classes, "Classes names are not set. Don't know what audio label is"
+        label = self.classes[idx]
+        return label
 
-
+    def predict_audio_label_index(self, audio):
+        audio.compute_mfcc()
+        x = audio.mfcc.T # (time_len, feature_dimension)
+        idx = self.predict(x)
+        return idx
+    
 def evaluate_model(model, eval_loader, num_to_eval=-1):
     ''' Eval model on a dataset '''
     device = model.device
@@ -194,6 +207,7 @@ def train_model(model, args, train_loader, eval_loader):
     # -- Loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    optimizer.zero_grad()
 
     # -- For updating learning rate
     def update_lr(optimizer, lr):    
@@ -203,12 +217,13 @@ def train_model(model, args, train_loader, eval_loader):
     # -- Train the model
     total_step = len(train_loader)
     curr_lr = args.learning_rate
-
+    cnt_batches = 0
     for epoch in range(1, 1+args.num_epochs):
         cnt_correct, cnt_total = 0, 0
         for i, (featuress, labels) in enumerate(train_loader):
+            cnt_batches += 1
 
-            ''' original code:
+            ''' original code of pytorch-tutorial:
             images = images.reshape(-1, sequence_length, input_size).to(device)
             labels = labels.to(device)
             # we can see that the shape of images should be: 
@@ -222,9 +237,11 @@ def train_model(model, args, train_loader, eval_loader):
             loss = criterion(outputs, labels)
             
             # Backward and optimize
-            optimizer.zero_grad()
             loss.backward() # error
-            optimizer.step()
+            if cnt_batches % args.gradient_accumulations == 0:
+                # Accumulates gradient before each step
+                optimizer.step()
+                optimizer.zero_grad()
 
             # Record result
             _, argmax = torch.max(outputs, 1)

@@ -1,0 +1,52 @@
+Args:
+	input_size          : 12
+	batch_size          : 1
+	hidden_size         : 64
+	num_layers          : 3
+	num_epochs          : 25
+	learning_rate       : 0.001
+	learning_rate_decay_interval: 5
+	learning_rate_decay_rate: 0.5
+	weight_decay        : 0.0
+	gradient_accumulations: 16
+	load_weights_from   : None
+	finetune_model      : False
+	device              : cuda
+	data_folder         : data/kaggle/
+	train_eval_test_ratio: [0.9, 0.1, 0.0]
+	do_data_augment     : True
+	classes_txt         : config/classes_kaggle.names
+	num_classes         : 35
+	plot_accu           : True
+	show_plotted_accu   : False
+	save_model_to       : checkpoints/
+	save_log_to         : checkpoints/log.txt
+	save_fig_to         : checkpoints/fig.jpg
+
+Accuracies:
+	Epoch     Train     Eval      Test      
+	1         0.375     0.711     -0.100    
+	2         0.623     0.793     -0.100    
+	3         0.688     0.840     -0.100    
+	4         0.719     0.861     -0.100    
+	5         0.735     0.866     -0.100    
+	6         0.764     0.890     -0.100    
+	7         0.775     0.891     -0.100    
+	8         0.781     0.896     -0.100    
+	9         0.786     0.901     -0.100    
+	10        0.788     0.904     -0.100    
+	11        0.803     0.910     -0.100    
+	12        0.805     0.914     -0.100    
+	13        0.807     0.915     -0.100    
+	14        0.810     0.912     -0.100    
+	15        0.811     0.914     -0.100    
+	16        0.815     0.918     -0.100    
+	17        0.819     0.918     -0.100    
+	18        0.819     0.918     -0.100    
+	19        0.818     0.921     -0.100    
+	20        0.821     0.919     -0.100    
+	21        0.824     0.923     -0.100    
+	22        0.823     0.922     -0.100    
+	23        0.828     0.924     -0.100    
+	24        0.826     0.923     -0.100    
+	25        0.825     0.923     -0.100    
