@@ -334,7 +334,7 @@ def get_wav_filenames(path_to_data):
 if __name__ == "__main__":
     
     def test_Class_AudioData():
-        audio = AudioClass(filename="test_data/audio_1.wav")
+        audio = AudioClass(filename="test_data/audio_numbers.wav")
         audio.plot_audio()
         audio.plot_mfcc()
         audio.plot_mfcc_histogram()
