@@ -89,3 +89,15 @@ Copy one of the saved weight file ".ckpt" from "checkpoints/" to "good_weights/k
 * Inference a folder containing audio files:  
     For example:
     > $ python src/s4_inference_audio_file.py --path_to_data test_data/
+
+# 6. Reference
+
+* Record audio  
+https://python-sounddevice.readthedocs.io/en/0.3.12/examples.html#recording-with-arbitrary-duration
+
+* LSTM  
+https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/02-intermediate/recurrent_neural_network/main.py
+
+* How to augment audio data  
+https://www.kaggle.com/CVxTz/audio-data-augmentation
+
